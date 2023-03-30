@@ -1,4 +1,4 @@
-package com.example.galery;
+package com.example;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -24,7 +24,6 @@ import com.example.galery.storage.StorageService;
 
 @Controller
 public class FileUploadController {
-
     private final StorageService storageService;
 
     @Autowired
@@ -36,11 +35,12 @@ public class FileUploadController {
     public String listUploadedFiles(Model model) throws IOException {
 
         model.addAttribute("files", storageService.loadAll().map(
-                        path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
-                                "serveFile", path.getFileName().toString()).build().toUri().toString())
-                .collect(Collectors.toList()));
+            path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class, 
+                "serveFile", path.getFileName().toString()).build().toUri().toString())
+            .collect(Collectors.toList()));
+        
+            return "uploadForm";
 
-        return "uploadForm";
     }
 
     @GetMapping("/files/{filename:.+}")
@@ -48,24 +48,21 @@ public class FileUploadController {
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
 
         Resource file = storageService.loadAsResource(filename);
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"" + file.getFilename() + "\"").body(file);
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, 
+        "attachment; filename=\""+file.getFilename() + "\"").body(file);
     }
 
     @PostMapping("/")
-    public String handleFileUpload(@RequestParam("file") MultipartFile file,
-                                   RedirectAttributes redirectAttributes) {
+    public String handleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
 
         storageService.store(file);
-        redirectAttributes.addFlashAttribute("message",
-                "You successfully uploaded " + file.getOriginalFilename() + "!");
+        redirectAttributes.addFlashAttribute("message", "You successfully uploaded " + file.getOriginalFilename() + "!");
 
         return "redirect:/";
     }
 
     @ExceptionHandler(StorageFileNotFoundException.class)
-    public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {
+    public ResponseEntity<?> handleStorageFileNotFound (StorageFileNotFoundException exc) {
         return ResponseEntity.notFound().build();
     }
-
 }
